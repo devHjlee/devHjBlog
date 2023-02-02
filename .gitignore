@@ -64,3 +64,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/.gradle/
