@@ -1,7 +1,7 @@
 # 목적
 * 신규 프로젝트에서 사용 되었던 JPA, QueryDsl 을 정리
-* Entity 연관관계와 Fetch 에 대해 간단한 게시판 구현을 통해 정리
-* 
+* Spring Data Jpa 로 Entity 연관관계와 Fetch 에 대해 간단한 게시판 구현을 통해 정리
+* QueryDsl 추가
   
 ## 목차
   
@@ -186,15 +186,17 @@ configurations {
     }
  ```
 
-### 2. Spring Data JPA 로 구현
-  * QueryDsl 을 적용하기 전에 Spring Data JPA 를 이용하여 연관관계, Fetch 에 대한 설명
-#### 1) Post, User Entity 
+### 2. Spring Data JPA 로 Entity, Service, Repository 구현
+
+#### 1) Post, User Entity
   * @NoArgsConstructor(access = AccessLevel.PROTECTED)
     * 기본생성자의 접근 제어를 PROTECTED 설정함으로써 무분별한 객체 생성을 막음 (ex : User user = new User)
   * @Setter 지양(절대 사용금지는 아니다)
     * Setter 는 그 의도 파악과 객체를 변경 할 수 있는 상태가 되어 안전성을 보장받기 힘들다.
     * JPA 에서 Setter는 곧 Update 쿼리를 의미하기에 변경이 필요하면 의미있는 메소드를 생성해서 변경하는것이 좋다.
-
+  * (User) 1:N (Post) 양방향으로 Fetch LAZY, EAGER 차이
+    * 사용자 한명이 여러 글을 작성 할 수 있다는 가정 
+    * OneToMany LAZY, ManyToOne EAGER TEST 
  ```java
   @Entity
   @Getter
@@ -210,7 +212,7 @@ configurations {
     private String userName;
     private String password;
   
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user") //default : LAZY
     private List<Post> posts = new ArrayList<>();
   
     @Builder
@@ -243,7 +245,7 @@ configurations {
     @Column(length = 1)
     private String deleteYn = "N";
   
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER) //default : EAGER
     @JoinColumn(name = "user_no")
     private User user;
   
