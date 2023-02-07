@@ -28,7 +28,7 @@ public class PostService {
      * @param content
      * @return List<PostDTO>
      */
-    public List<PostDTO> findByTitleOrContent(String title, String content){
+    public List<PostDTO> findByTitleOrContent(String title, String content) {
         return postRepository.findPostByTitleOrContent(title, content).stream().map(m-> PostDTO.builder().title(m.getTitle()).content(m.getContent()).build())
                 .collect(Collectors.toList());
     }
@@ -37,7 +37,7 @@ public class PostService {
      * 전체 게시글 조회
      * @return List<PostDTO>
      */
-    public List<PostDTO> findAll(){
+    public List<PostDTO> findAll() {
         return postRepository.findAll().stream().map(m-> PostDTO.builder().title(m.getTitle()).content(m.getContent()).build())
                 .collect(Collectors.toList());
     }
@@ -48,7 +48,7 @@ public class PostService {
      * @param postDTO
      * @return
      */
-    public boolean save(String email, PostDTO postDTO){
+    public boolean save(String email, PostDTO postDTO) {
         User user = userRepository.findByEmail(email);
         if(user.getId() != null){
             postDTO.setUser(user);
@@ -57,4 +57,8 @@ public class PostService {
         }
         return false;
     }
+
+//    public PostDTO updatePost(PostDTO postDTO) {
+//        return;
+//    }
 }

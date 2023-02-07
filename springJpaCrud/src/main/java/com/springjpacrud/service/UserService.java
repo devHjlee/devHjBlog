@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -21,8 +22,15 @@ public class UserService {
      * 전체 사용자 조회
      * @return List<User>
      */
-    public List<User> findAll(){
-        return userRepository.findAll();
+    public List<UserDTO> findAll(){
+
+        return userRepository.findAll().stream()
+                .map(m->UserDTO.builder()
+                        .userName(m.getUserName())
+                        .email(m.getEmail())
+                        .password(m.getPassword()) //@jsonignore Test
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public User findByEmail(String email){
@@ -41,6 +49,4 @@ public class UserService {
         }
         return false;
     }
-
-    /* QueryDsl을 통한 조회 기능 */
 }

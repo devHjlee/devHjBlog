@@ -1,8 +1,7 @@
 # 목적
-* 신규 프로젝트에서 JPA, Querydsl 을 통해 진행하게 되어 공부했던 내용들을 정리
-* 순수 JPA 만으로는 동적 쿼리에대한 한계가 있어 Querydsl 추가
-* 구현 목록
-  * Spring Data JPA, Querydsl 을 활용하여 게시판 CRUD 개발
+* 신규 프로젝트에서 사용 되었던 JPA, QueryDsl 을 정리
+* Entity 연관관계와 Fetch 에 대해 간단한 게시판 구현을 통해 정리
+* 
   
 ## 목차
   
@@ -43,8 +42,12 @@ Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프�
   - mysql-connector-j
 
 
-## 프로젝트 구성
-### 1. JPA, QueryDsl 적용 및 테스트
+## 프로젝트 구조
+
+이미지 넣어라
+
+
+### 1. JPA, QueryDsl 설정
 #### 1) build.gradle
 * JPA 의존성 추가
 * querydsl 플러그인 및 의존성 추가
@@ -183,3 +186,157 @@ configurations {
     }
  ```
 
+### 2. Spring Data JPA 로 구현
+  * QueryDsl 을 적용하기 전에 Spring Data JPA 를 이용하여 연관관계, Fetch 에 대한 설명
+#### 1) Post, User Entity 
+  * @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    * 기본생성자의 접근 제어를 PROTECTED 설정함으로써 무분별한 객체 생성을 막음 (ex : User user = new User)
+  * @Setter 지양(절대 사용금지는 아니다)
+    * Setter 는 그 의도 파악과 객체를 변경 할 수 있는 상태가 되어 안전성을 보장받기 힘들다.
+    * JPA 에서 Setter는 곧 Update 쿼리를 의미하기에 변경이 필요하면 의미있는 메소드를 생성해서 변경하는것이 좋다.
+
+ ```java
+  @Entity
+  @Getter
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  public class User {
+  
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_no")
+    private Long id;
+  
+    private String email;
+    private String userName;
+    private String password;
+  
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts = new ArrayList<>();
+  
+    @Builder
+    public User(String email, String userName, String password,List<Post> posts){
+      this.email = email;
+      this.userName = userName;
+      this.password = password;
+      this.posts = posts;
+    }
+  }
+ ```
+
+ ```java
+  @Entity
+  @Getter
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  public class Post {
+  
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "post_id")
+    private Long id;
+  
+    @Column(nullable = false)
+    private String title;
+  
+    @Column(nullable = false,columnDefinition = "TEXT")
+    private String content;
+  
+    @Column(length = 1)
+    private String deleteYn = "N";
+  
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_no")
+    private User user;
+  
+    @Builder
+    public Post(String title, String content, User user){
+      this.title = title;
+      this.content = content;
+      this.user = user;
+    }
+  
+    /* 비지니스로직 */
+    /* 게시글 수정 */
+    public void updatePost(String title, String content) {
+      this.title = title;
+      this.content = content;
+    }
+    /* 게시글 삭제 */
+    public void deletePost() {
+      this.deleteYn = "Y";
+    }
+  }
+ ```
+
+#### 2) Post, User Entity(변경후)
+ ```java
+  @Entity
+  @Getter
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  public class User {
+  
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_no")
+    private Long id;
+  
+    @Nullable
+    private String email;
+  
+    private String userName;
+  
+    @Nullable
+    @JsonIgnore
+    private String password;
+  
+    @Builder
+    public User(String email, String userName, String password){
+      this.email = email;
+      this.userName = userName;
+      this.password = password;
+    }
+  }
+ ```
+
+ ```java
+  @Entity
+  @Getter
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  public class Post {
+  
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      @Column(name = "post_id")
+      private Long id;
+  
+      @Column(nullable = false)
+      private String title;
+  
+      @Column(nullable = false,columnDefinition = "TEXT")
+      private String content;
+  
+      @Column(length = 1)
+      private String deleteYn = "N";
+  
+      @ManyToOne(fetch = FetchType.LAZY)
+      @JoinColumn(name = "user_no")
+      private User user;
+  
+      @Builder
+      public Post(String title, String content, User user){
+          this.title = title;
+          this.content = content;
+          this.user = user;
+      }
+  
+      /* 비지니스로직 */
+      /* 게시글 수정 */
+      public void updatePost(String title, String content) {
+          this.title = title;
+          this.content = content;
+      }
+      /* 게시글 삭제 */
+      public void deletePost() {
+          this.deleteYn = "Y";
+      }
+  }
+ ```
