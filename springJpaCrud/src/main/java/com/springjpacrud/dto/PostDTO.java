@@ -9,6 +9,7 @@ import lombok.Setter;
 @Getter@Setter
 @Builder
 public class PostDTO {
+    private Long id;
     private String title;
     private String content;
     private User user;

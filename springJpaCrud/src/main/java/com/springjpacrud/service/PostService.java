@@ -29,8 +29,25 @@ public class PostService {
      * @return List<PostDTO>
      */
     public List<PostDTO> findByTitleOrContent(String title, String content) {
-        return postRepository.findPostByTitleOrContent(title, content).stream().map(m-> PostDTO.builder().title(m.getTitle()).content(m.getContent()).build())
+        return postRepository.findPostByTitleOrContent(title, content).stream()
+                .map(m-> PostDTO.builder()
+                        .title(m.getTitle())
+                        .content(m.getContent())
+                        .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 게시글 상세
+     * @param id
+     * @return PostDTO
+     */
+    public PostDTO findPostById (Long id) {
+        Post post = postRepository.findPostById(id);
+        return PostDTO.builder()
+                .title(post.getTitle())
+                .content(post.getContent())
+                .build();
     }
 
     /**
@@ -38,7 +55,11 @@ public class PostService {
      * @return List<PostDTO>
      */
     public List<PostDTO> findAll() {
-        return postRepository.findAll().stream().map(m-> PostDTO.builder().title(m.getTitle()).content(m.getContent()).build())
+        return postRepository.findAll().stream()
+                .map(m-> PostDTO.builder()
+                        .title(m.getTitle())
+                        .content(m.getContent())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -58,7 +79,14 @@ public class PostService {
         return false;
     }
 
-//    public PostDTO updatePost(PostDTO postDTO) {
-//        return;
-//    }
+    /**
+     * 게시글 수정
+     * @param postDTO
+     * @return boolean
+     */
+    public boolean updatePost(PostDTO postDTO) {
+        Post post = postRepository.findPostById(postDTO.getId());
+        post.updatePost(postDTO.getTitle(),postDTO.getContent());
+        return true;
+    }
 }

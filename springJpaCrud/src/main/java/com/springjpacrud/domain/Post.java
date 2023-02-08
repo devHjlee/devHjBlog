@@ -23,9 +23,6 @@ public class Post {
     @Column(nullable = false,columnDefinition = "TEXT")
     private String content;
 
-    @Column(length = 1)
-    private String deleteYn = "N";
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_no")
     private User user;
@@ -43,8 +40,5 @@ public class Post {
         this.title = title;
         this.content = content;
     }
-    /* 게시글 삭제 */
-    public void deletePost() {
-        this.deleteYn = "Y";
-    }
+
 }

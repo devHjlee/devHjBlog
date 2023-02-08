@@ -24,14 +24,10 @@ public class User {
     private String userName;
     private String password;
 
-    @OneToMany(mappedBy = "user")
-    private List<Post> posts = new ArrayList<>();
-
     @Builder
-    public User(String email, String userName, String password,List<Post> posts){
+    public User(String email, String userName, String password){
         this.email = email;
         this.userName = userName;
         this.password = password;
-        this.posts = posts;
     }
 }

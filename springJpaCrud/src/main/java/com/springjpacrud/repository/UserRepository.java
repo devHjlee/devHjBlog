@@ -12,6 +12,7 @@ public interface UserRepository extends JpaRepository<User,Long>{
      */
     User findByEmail(String email);
 
+    User findUserById(Long id);
     /**
      * Email 중복 체크
      * @param email
