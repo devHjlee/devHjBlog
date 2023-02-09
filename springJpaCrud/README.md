@@ -476,6 +476,7 @@ public class PostService {
                 .map(m-> PostDTO.builder()
                         .title(m.getTitle())
                         .content(m.getContent())
+                        .writer(m.getUser.getId())
                         .build())
                 .collect(Collectors.toList());
     }

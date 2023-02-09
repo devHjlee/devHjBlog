@@ -23,7 +23,7 @@ public class PostService {
     /* Spring Data Jpa 를 통한 기능 */
 
     /**
-     * 게시글 조회
+     * 게시글 검색
      * @param title
      * @param content
      * @return List<PostDTO>
@@ -57,8 +57,10 @@ public class PostService {
     public List<PostDTO> findAll() {
         return postRepository.findAll().stream()
                 .map(m-> PostDTO.builder()
+                        .id(m.getId())
                         .title(m.getTitle())
                         .content(m.getContent())
+                        .writer(m.getUser().getId())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -71,7 +73,7 @@ public class PostService {
      */
     public boolean save(String email, PostDTO postDTO) {
         User user = userRepository.findByEmail(email);
-        if(user.getId() != null){
+        if(user != null){
             postDTO.setUser(user);
             postRepository.save(postDTO.toEntity());
             return true;
