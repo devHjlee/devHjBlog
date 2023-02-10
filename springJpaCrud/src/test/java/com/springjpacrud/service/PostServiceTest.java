@@ -34,8 +34,8 @@ class PostServiceTest {
 
     @Test
     void save(){
-        PostDTO postDTO = PostDTO.builder().title("ABC").content("TEST!!!").build();
-        boolean rs = postService.save("dlgudwo11@naver.com",postDTO);
+        PostDTO postDTO = PostDTO.builder().title("ABC").content("TEST!!!").email("Test1@naver.com").build();
+        boolean rs = postService.save(postDTO);
         assertThat(true).isEqualTo(rs);
     }
 

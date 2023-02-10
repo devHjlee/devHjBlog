@@ -60,19 +60,18 @@ public class PostService {
                         .id(m.getId())
                         .title(m.getTitle())
                         .content(m.getContent())
-                        .writer(m.getUser().getId())
+                        .email(m.getEmail())
                         .build())
                 .collect(Collectors.toList());
     }
 
     /**
      * 게시글 저장
-     * @param email
      * @param postDTO
      * @return
      */
-    public boolean save(String email, PostDTO postDTO) {
-        User user = userRepository.findByEmail(email);
+    public boolean save(PostDTO postDTO) {
+        User user = userRepository.findByEmail(postDTO.getEmail());
         if(user != null){
             postDTO.setUser(user);
             postRepository.save(postDTO.toEntity());
@@ -88,7 +87,9 @@ public class PostService {
      */
     public boolean updatePost(PostDTO postDTO) {
         Post post = postRepository.findPostById(postDTO.getId());
-        post.updatePost(postDTO.getTitle(),postDTO.getContent());
+        if(post != null) {
+            post.updatePost(postDTO.getTitle(), postDTO.getContent());
+        }
         return true;
     }
 }

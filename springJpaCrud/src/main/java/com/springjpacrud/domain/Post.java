@@ -23,14 +23,17 @@ public class Post {
     @Column(nullable = false,columnDefinition = "TEXT")
     private String content;
 
+    private String email;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_no")
     private User user;
 
     @Builder
-    public Post(String title, String content, User user){
+    public Post(String title, String content, String email, User user){
         this.title = title;
         this.content = content;
+        this.email = email;
         this.user = user;
     }
 
