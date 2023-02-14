@@ -3,34 +3,48 @@
 2. Spring Data Jpa 로 간단한 게시판 구현을 통해 정리
 3. User, Post Entity 에서 Fetch LAZY, EAGER 변경해가면서 이해
 4. QueryDsl 로 동적쿼리 작성
-  
-## 목차
-  
-  [0.Quartz란?](#Quartz란?)
 
+## 예제소스
+###https://github.com/devHjlee/devHjBlog/tree/main/springJpaCrud  
+
+## ORM ??
+ORM(Object-Relational Mapping)은 객체와 관계형 데이터베이스를 매핑하며 ORM 프레임워크는 객체와 테이블을 매핑하여 패러다임 불일치 문제를 개발자 대신 해결해준다.
+하이버네이트(hibernate.org)라는 오픈소스 ORM 프레임워크가 등장하면서 하이버네이트를 기반으로 새로운 자바 ORM 기술 표준이 만들어졌다.
 ## JPA 란?
-Job Scheduling 라이브러리 이며 자바로 개발되어 모든 자바 프로그램에서 사용 가능하고
-간단한 interval형식이나 Cron 표현식 스케줄링 지원
-* 장점
-  * DB 기반의 클러스터 기능 제공
-  * 시스템 Fail-over / Random 방식의 로드 분산처리 지원
-  * In-memory Job scheduler 제공
-  * 여러 기본 플러그인 제공
-    * ShutdownHookPlugin – JVM 종료 이벤트 캐치
-    * LoggingJobHistoryPlugin – Job 실행 로그 남기기
+JPA(Java Persistence API)는 JAVA 진영의 ORM(Object Relational Mapping) 기술 표준이다.즉, ORM을 사용하기 위한 인터페이스를 모아둔 것이라 볼 수 있다.  
+ORM 에 대한 자바 API 규격이며 Hibernate, OpenJPA 등이 JPA 를 구현한 구현체이며 Application 과 JDBC 사이에서 동작한다.  
+개발자가 직접 JDBC API를 사용하지 않고 JPA 내부 JDBC API 를 사용하여 SQL 을 호출하고 DataBase를 간적접으로 조작한다.
 
-* 단점
-  * Random 방식 클러스터링 기능이라 완벽한 로드 분산 안됨
-  * 스케줄링 실행에 대한 히스토리 보관에 대한 개발 필요
-
-* Quartz 흐름
-  ![img_1.png](img_1.png)
-  출처 : https://www.javarticles.com/2016/03/quartz-scheduler-model.html#prettyPhoto
-
-## QueryDsl 이란?
-
-
-
+* Persistence Context 영속성 컨텍스트
+    * Entity 를 영구저장하는 환경이라는 뜻
+    * Application 과 DB 사이에서 객체를 보관하는 역할
+    * Application 은 EntityManagerFactory을 통해 DB에 접근하는 트랜잭션이 생길때마다 EntityManager를 생성하여 영속성 컨텍스트에 접근
+    * 동일성 보장
+      * 하나의 EntityManager에서 가져온 Entity의 동일성을 보장한다.
+    * transactional write-behind 쓰기지연
+      * 한 트랜잭션 내에서 발생하는 insert update delete 에 대해 쓰기지연 SQL 저장소에 저장된 후 트랜잭션 종료시점에 한번에 실행한다.
+    * DirtyChecking 변경감지
+      * 엔티티의 수정이 일어나도 개발자는 영속성 컨텍스트에 따로 알려주지 않아도 영속성 컨텍스트가 알아서 변경 사항을 체크해준다.
+      * 1차 캐시에 entity를 저장할때 스냅샷 필드도 따로 저장하여 commit이나 flush를 할 때 해당 entity와 스냅샷을 비교하여 변경사항이 있으면 알아서 UPDATE SQL을 만들어서 DB에 전송한다.
+    * 1차캐시
+      * 1차 캐시는 ID를 key,Entity 를 값으로하는 Map 형식으로 구성되어있다. 
+      * 데이터 조회 시 1차 캐시에 데이터가 존재하는 경우 DB에 SELECT 쿼리를 보내는 것이 아니라 1차 캐시에서 데이터를 가져온다. 
+      * 1차 캐시에 존재하지 않는 데이터를 조회하는 경우에는 DB에서 SELECT 쿼리를 보내 조회하고 1차 캐시에 저장한 후 리턴한다.
+* Entity Manger
+  * 영속성 컨텍스내에서 Entity를 관리
+* Entity Life Cycle
+  ![image0.jpeg](image0.jpeg)
+  * 비영속(new/transist)
+    * Entity 객체를 생성한 상태
+  * 영속(managed)
+    * EntityManager 의 persist(Entity)를 통해 영속성 컨택스트에 넣어진 상태
+  * 준영속(detached)
+    * 영속성 컨택스트에 저장되었다가 분리된 상태
+    * detach(),clear(),close()
+    * 식별자가 존재하며 merge()로 다시 영속성 상태가능
+    * 1차캐시,쓰기지연,변경감지,지연로딩을 포함한 영속성 컨택스트가 제공하는 기능에대해 동작 하지 않는다.
+  * 삭제(remove)
+    * 영속성 컨택스트와 DB에서 해당 Entity를 삭제한 상태
 
 ## 개발환경
 * IDE : IntelliJ
@@ -187,7 +201,7 @@ configurations {
     }
  ```
 
-### 2. Spring Data JPA 로 Entity, Service, Repository 구현
+### 2. Spring Data JPA 로 Entity, Service, Repository, Controller 구현
 
 #### 1) Post, User Entity
   * @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -370,6 +384,8 @@ JPQL 을 통해 select p from POST p 쿼리를 진행하면 Post 안에 User가 
         }
     }
  ```
+
+#### 2) Repository, Service
 * Repository
  ```java
  public interface UserRepository extends JpaRepository<User,Long>{
@@ -413,11 +429,7 @@ public class UserService {
     public User findByEmail(String email){
         return userRepository.findByEmail(email);
     }
-    /**
-     * 회원가입
-     * @param userDTO
-     * @return boolean
-     */
+
     public boolean save(UserDTO userDTO){
         if(!userRepository.existsByEmail(userDTO.getEmail())){
             User user = userDTO.toEntity();
@@ -439,12 +451,6 @@ public class PostService {
 
     /* Spring Data Jpa 를 통한 기능 */
 
-    /**
-     * 게시글 조회
-     * @param title
-     * @param content
-     * @return List<PostDTO>
-     */
     public List<PostDTO> findByTitleOrContent(String title, String content) {
         return postRepository.findPostByTitleOrContent(title, content).stream()
                 .map(m-> PostDTO.builder()
@@ -454,11 +460,6 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 게시글 상세
-     * @param id
-     * @return PostDTO
-     */
     public PostDTO findPostById (Long id) {
         Post post = postRepository.findPostById(id);
         return PostDTO.builder()
@@ -467,29 +468,20 @@ public class PostService {
                 .build();
     }
 
-    /**
-     * 전체 게시글 조회
-     * @return List<PostDTO>
-     */
     public List<PostDTO> findAll() {
         return postRepository.findAll().stream()
                 .map(m-> PostDTO.builder()
+                        .id(m.getId())
                         .title(m.getTitle())
                         .content(m.getContent())
-                        .writer(m.getUser.getId())
+                        .email(m.getEmail())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 게시글 저장
-     * @param email
-     * @param postDTO
-     * @return
-     */
-    public boolean save(String email, PostDTO postDTO) {
-        User user = userRepository.findByEmail(email);
-        if(user.getId() != null){
+    public boolean save(PostDTO postDTO) {
+        User user = userRepository.findByEmail(postDTO.getEmail());
+        if(user != null){
             postDTO.setUser(user);
             postRepository.save(postDTO.toEntity());
             return true;
@@ -497,16 +489,36 @@ public class PostService {
         return false;
     }
 
-    /**
-     * 게시글 수정
-     * @param postDTO
-     * @return boolean
-     */
     public boolean updatePost(PostDTO postDTO) {
         Post post = postRepository.findPostById(postDTO.getId());
-        post.updatePost(postDTO.getTitle(),postDTO.getContent());
+        if(post != null) {
+            post.updatePost(postDTO.getTitle(), postDTO.getContent());
+        }
         return true;
     }
 }
 ```
+#### 3) Controller
+* controller
+``` java
+@RestController
+@RequestMapping(value = "/v1/post")
+@RequiredArgsConstructor
+public class PostController {
+    @PostMapping(value = "/save")
+    public ResponseEntity<?> savePost(@RequestBody PostDTO postDto){
+
+        return new ResponseEntity<>(postService.save(postDto), HttpStatus.OK);
+    }
+}
+```
+
+PostMan을 통한 Save 테스트 및 쿼리로그
+
+![image6.png](image6.png)
+![image7.png](image7.png)
+
+
+## QueryDsl 이란?
+
 
