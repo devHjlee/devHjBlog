@@ -58,9 +58,7 @@ ORM 에 대한 자바 API 규격이며 Hibernate, OpenJPA 등이 JPA 를 구현�
 
 
 ## 프로젝트 구조
-
-이미지 넣어라
-
+![image8.png](image8.png)
 
 ### 1. JPA, QueryDsl 설정
 #### 1) build.gradle
