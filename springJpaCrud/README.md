@@ -65,7 +65,7 @@ ORM 에 대한 자바 API 규격이며 Hibernate, OpenJPA 등이 JPA 를 구현�
 * JPA 의존성 추가
 * querydsl 플러그인 및 의존성 추가
 
-```groovy
+```properties
 buildscript {
   ext {
     queryDslVersion = "5.0.0"
@@ -139,7 +139,7 @@ configurations {
 
 * Unable to load class 'com.querydsl.apt.jpa.JPAAnnotationProcessor'
   * http://honeymon.io/tech/2020/07/09/gradle-annotation-processor-with-querydsl.html
-```groovy
+```properties
     configurations {
       compileOnly {
         extendsFrom annotationProcessor
@@ -150,7 +150,7 @@ configurations {
 ![image1_error.png](image1_error.png)
 * Unable to load class 'com.mysema.codegen.model.Type'
   * 최초 설정 시 버전을 명시 하지 않았을때 5.0.0 버전으로 되는걸 확인 했으나 위에 오류가 발생하여 버전을 명시하여 수정
-```groovy
+```properties
     // 변경전
     implementation 'com.querydsl:querydsl-jpa'
     implementation 'com.querydsl:querydsl-apt'
@@ -170,7 +170,7 @@ configurations {
 #### 2) Q타입 확인용 Test Entity, Test Code 생성
 * Gradle console : ./gradlew clean comlieQuerydsl
 
- ``` java
+``` java
   @Entity
   @Getter
   @Setter
@@ -179,10 +179,10 @@ configurations {
       private Long id;
   
   }
- ```
+```
 ![image3.png](image3.png)
 
- ``` java
+``` java
     @Test
     public void testQueryDsl() {
         QTypeTestEntity qType = new QTypeTestEntity();
@@ -197,7 +197,7 @@ configurations {
         assertThat(result).isEqualTo(qType);
         assertThat(result.getId()).isEqualTo(qType.getId());
     }
- ```
+```  
 
 ### 2. Spring Data JPA 로 Entity, Service, Repository, Controller 구현
 
@@ -214,8 +214,9 @@ configurations {
 ![image4.png](image4.png)
 ![image5.png](image5.png)
 
-  * 테스트를 위한 ManyToOne 설정
- ```java
+  * 테스트를 위한 ManyToOne 설정  
+
+```java
   @Entity
   @Getter
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -243,10 +244,11 @@ configurations {
     }
 
   }
- ```
+```  
+
 * 테스트 코드
 
- ``` java
+``` java
     @Test
     void find(){
         System.out.println("Post Find STATR");
@@ -266,11 +268,11 @@ configurations {
 
     }
  
-  ```
+```
 
 * 테스트 코드 실행 로그 설명
 
- ``` sql
+``` java
 HeFormatSql(P6Spy sql,Hibernate format): //1. 설명
 select
 post0_.post_id as post_id1_0_0_,
@@ -312,7 +314,7 @@ where
 posts0_.user_no=6
 TEST
 USER.POSTS Find END
- ```
+```
 1. Post Entity에서 User를 ManyToOne Fetch EAGER(즉시로딩) 설정시에는 User 와 조인(user_no)을 걸어 쿼리를 실행하여 User Entity도 불러온다.
 2. 1에서 User값도 이미 불러온 상태이므로 User에 대한 쿼리를 실행하지 않아도 값을 불러올 수 있다.
 3. User Entity 에서는 Post를 OneToMany Fetch LAZY(지연로딩) 로 설정하였기에 posts 는 프록시 객체로 가져온 상태였지만 post.getUser().getPosts() 로 접근시 해당 쿼리를 호출하게 된다.
@@ -324,7 +326,7 @@ JPQL 을 통해 select p from POST p 쿼리를 진행하면 Post 안에 User가 
 다시 원래 소스로 돌아가서 게시글 테이블은 회원 테이블과 연관관계(ManyToOne)를 갖고 회원테이블은 연관관계없이 단방향으로 하였다.
 
 * Entity
- ```java
+```java
     @Entity
     @Getter
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -381,11 +383,11 @@ JPQL 을 통해 select p from POST p 쿼리를 진행하면 Post 안에 User가 
             this.content = content;
         }
     }
- ```
+```
 
 #### 2) Repository, Service
 * Repository
- ```java
+```java
  public interface UserRepository extends JpaRepository<User,Long>{
 
     User findByEmail(String email);
@@ -397,9 +399,10 @@ JPQL 을 통해 select p from POST p 쿼리를 진행하면 Post 안에 User가 
 public interface PostRepository extends JpaRepository<Post,Long> {
     List<Post> findPostByTitleOrContent(String content, String title);
 }
-  ```
+```
 
 * Service
+
 ```java
 @RequiredArgsConstructor
 @Service
@@ -498,7 +501,7 @@ public class PostService {
 ```
 #### 3) Controller
 * controller
-``` java
+```java
 @RestController
 @RequestMapping(value = "/v1/post")
 @RequiredArgsConstructor
