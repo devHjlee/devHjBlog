@@ -4,7 +4,7 @@ JPA를 통해 개발할시 대용량 Insert 방법 구현
 2. JDBC Batch
 
 ## 예제소스
-###https://github.com/devHjlee/devHjBlog/tree/main/springJpaCrud  
+### https://github.com/devHjlee/devHjBlog/tree/main/springJpaBulk 
 
 ## Enity ID 전략에따라 구현하는 방법
   * ID 직접할당 : JPA, JDBC Batch
@@ -150,6 +150,6 @@ spring.datasource.url=jdbc:mysql://localhost:3306/jpa?useSSL=false&allowPublicKe
   ![img3.png](img3.png)
   * 0.5초
 
-#2만건에 대해서 이정도 시간차이가 발생하는걸보니 JPA를 사용한다고해서 JPA만 쓰면 안된다는걸 느끼게 되네...
+# 2만건에 대해서 이정도 시간차이가 발생하는걸보니 JPA를 사용한다고해서 JPA만 쓰면 안된다는걸 느끼게 되네...
 
 
