@@ -521,5 +521,18 @@ PostMan을 통한 Save 테스트 및 쿼리로그
 
 
 ## QueryDsl 이란?
+- JPQL 은 문자(String)이며, Type-Check가 불가능.
+- 해당 로직 실행 전까지 작동여부 확인이 불가
+- 런타임시점에 오류가 발견됨
+QueryDSL
+- 문자가 아닌 코드로 작성
+- 파라미터바인딩 자동
+- 컴파일 시점 문법 오류 발견이 가능
+- 코드 자동 완성
+- 동적쿼리 가능
+- JPQL 단점 보완
 
 
+QType 활용
+QMember qMember = new QMember("m"); // 별칭 직접지정
+QMeber qMember = QMember.member; // 기본인스턴스 사용
