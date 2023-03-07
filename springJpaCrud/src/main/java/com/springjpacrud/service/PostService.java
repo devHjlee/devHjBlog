@@ -92,4 +92,12 @@ public class PostService {
         }
         return true;
     }
+
+    /* QueryDsl 를 통한 기능 */
+    public List<Post> getPosts(){
+        return postRepository.getPosts();
+    }
+    public List<Post> getPostsFetchJoin(){
+        return postRepository.getPostsFetchJoin();
+    }
 }

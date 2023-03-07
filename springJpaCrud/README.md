@@ -521,34 +521,118 @@ PostMan을 통한 Save 테스트 및 쿼리로그
 
 
 ## QueryDsl 이란?
-정적타입을 이용하여 SQL 과 같은 쿼리를 생성할 수 있도록 제공하는 오픈소스
+정적타입을 이용하여 SQL 과 같은 쿼리를 생성할 수 있도록 제공하는 오픈소스(JPQL 을 만들어주는 builder 최종적으로는 JPQL 로 변환)
+예시 : 학교 1:N 학급 1:N 학생 연관관계를 갖고있을때 JPA만을 통해 조회를 진행하게되면 학교에 해당하는 학생을 찾으려면 학교를 통해 학급을 조회하게되고 다시 학급을 통해 학생을 조회하기때문에 수만흔 select 쿼라가 발생할수도있다.
+또한 연관관계가 없어도 join을 통해 쿼리를 작성 할 수 있고 DTO를 생성하여 원하는 레코드만 반환할 수 있다.
 
+## JPQL QueryDsl 비교
+JPQL
 - JPQL 은 문자(String)이며, Type-Check가 불가능.
 - 해당 로직 실행 전까지 작동여부 확인이 불가
-- 런타임시점에 오류가 발견됨
+- 파라미터 바인딩은 문자열로 입력하기에 런타임 시점(실행시점오류)
+
 QueryDSL
 - 문자가 아닌 코드로 작성
-- 파라미터바인딩 자동
+- 파라미터바인딩 자동(sqlinjection에대해 안전)
 - 컴파일 시점 문법 오류 발견이 가능
 - 코드 자동 완성
 - 동적쿼리 가능
 - JPQL 단점 보완
 
+## 사용시 주의점   
+### 1차캐시 이슈
+JPA 에서 findBy 는 영속성 컨텍스트를 먼저 조회한 후, 없으면 데이터베이스를 조회하며 식별자가 아니면 1차 캐시를 사용하지 않는다. 식별자가 아닌 값으로 조회했을 때, 중복된 값을 조회해버리면 상당히 복잡해지기 때문
+JPQL 의 경우 데이터베이스를 먼저 조회한 후, 영속성 컨텍스트에 값이 들어있으면 버리고 없으면 저장.
+QueryDsl 은 JPQL 로 변화되며 조회할 때, 영속성 컨텍스트를 먼저 조회하지 않고, 데이터베이스를 먼저 조회.
+데이터베이스에서 조회해온 결과를 영속성 컨텍스트에 넣으려고하는데 이때 영속성 컨텍스트에 이미 해당 데이터가 있다면 데이터베이스를 통해 가져온 결과는 버린다.
+이렇게 하는 이유는 영속성에도 값과, 데이터베이스에 읽어온 값이 충돌하며 이는 DIRTY READ 가 발생한는 것이며, (영속성 컨텍스트에 있는 값을 변경중일 수 있으니) 데이터베이스에서 조회한 값을 버림으로써 NON-REPEATABLE READ 발생 도 막는 것
+그렇기에 JPA 내부에서 위와 같이 동작함으로 애플리케이션 레벨에서 REPEATABLE READ 레벨로 동작하게 되므로 이와같은 문제를 해결하기 위해서 데이터를 조회하기 전에 영속성 컨텍스트를 초기화하는 방법으로 해결이 가능하다.
 
-QType 활용
-QMember qMember = new QMember("m"); // 별칭 직접지정
-QMeber qMember = QMember.member; // 기본인스턴스 사용
+### 동시성 문제
+동시성 문제는 JPAQueryFactory를 생성할 때 제공하는 EntityManager(em)에 달려있다.
+스프링 프레임워크는 여러 쓰레드에서 동시에 같은 EntityManager에 접근해도, 트랜잭션 마다 별도의 영속성 컨텍스트를 제공하기 때문에, 동시성 문제는 걱정하지 않아도 된다.
 
-학교 1:N 학급 1:N 학생 연관관계를 갖고있을때 JPA만을 통해 조회를 진행하게되면 학교에 해당하는 학생을 찾으려면 학교를 통해 학급을 조회하게되고 다시 학급을 통해 학생을 조회하기때문에 수만흔 select 쿼라가 발생할수도있다.
-또한 연관관계가 없어도 join을 통해 쿼리를 작성 할 수 있고 DTO를 생성하여 원하는 레코드만 반환할 수 있다.
+### 기존 예시 소스중 Post(게시글)를 Querydsl 관련 변경 
+#### 1.Querydsl Config   
 
-1차캐시 이슈
-JPA 에서 findBy식별자 는 영속성 컨텍스트를 먼저 조회한 후, 없으면 데이터베이스를 조회합니다.
-식별자가 아니면 1차 캐시를 사용하지 않습니다. 왜냐하면 식별자가 아닌 값으로 조회했을 때, 중복된 값을 조회해버리면 상당히 복잡해지기 때문입니다.
-JPQL 의 경우 데이터베이스를 먼저 조회한 후, 영속성 컨텍스트에 값이 들어있으면 버리고 없으면 저장합니다.
-querydsl 은 JPQL 로 변환됩니다. JPQL 은 조회할 때, 영속성 컨텍스트를 먼저 조회하지 않고, 데이터베이스를 먼저 조회합니다.
-데이터베이스에서 조회해 온 값을 영속성 컨텍스트에 넣을려고 합니다.
-이 때, 영속성 컨텍스트에 이미 데이터가 있다면 데이터베이스에서 조회해 온 값을 버립니다.
-이렇게 하는 이유는 영속성에도 값과, 데이터베이스에 읽어온 값이 충돌하며 이는 DIRTY READ 가 발생한는 것이며, (영속성 컨텍스트에 있는 값을 변경중일 수 있으니) 데이터베이스에서 조회한 값을 버림으로써 NON-REPEATABLE READ 발생 도 막는 것입니다.
-그렇기에 JPA 내부에서 위와 같이 동작함으로 애플리케이션 레벨에서 REPEATABLE READ 레벨로 동작하게 됩니다.
-위와 같은 문제를 해결하기 위해서 데이터를 조회하기 전에 영속성 컨텍스트를 초기화하는 방법이 있습니다
+```java   
+@Configuration
+public class QuerydslConfig {
+
+@PersistenceContext
+private EntityManager entityManager;
+
+@Bean
+public JPAQueryFactory jpaQueryFactory(){
+  return new JPAQueryFactory(entityManager);
+}
+}
+```   
+
+#### 2.Post Repository
+* https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.custom-implementations 
+* PostRepositoryCustom,PostRepositoryImpl 추가   
+    * 기본 Q-Type활용
+      1. QPost p = new QPost("p"); >>> 같은테이블 조인시에만 선언해서 사용하자
+      2. QPost qpost = QPost.post;
+      3. import static com.springjpacrud.domain.QPost.post; >>>> 권장
+```java   
+public interface PostRepositoryCustom {
+    List<Post> getPosts();
+    List<Post> getPostsFetchJoin();
+}
+
+import static com.springjpacrud.domain.QPost.post;
+import static com.springjpacrud.domain.QUser.user;
+
+@RequiredArgsConstructor
+public class PostRepositoryImpl implements PostRepositoryCustom {
+    private final JPAQueryFactory jpaQueryFactory;
+
+    @Override
+    public List<Post> getPosts() {
+        return jpaQueryFactory
+                .selectFrom(post)
+                .join(post.user, user)
+                .fetch();
+    }
+
+    @Override
+    public List<Post> getPostsFetchJoin() {
+        return jpaQueryFactory
+                .selectFrom(post)
+                .join(post.user, user)
+                .fetchJoin()
+                .fetch();
+    }
+}
+
+```    
+
+* PostRepository 변경
+   
+```java   
+public interface PostRepository extends JpaRepository<Post,Long>, PostRepositoryCustom {
+    List<Post> findPostByTitleOrContent(String content, String title);
+    Post findPostById(Long id);
+}
+
+```   
+
+
+
+
+
+
+결과 조회   
+fetch() : 리스트 조회, 데이터 없으면 빈 리스트 반환   
+fetchOne() : 단 건 조회   
+결과가 없으면 : null   
+결과가 둘 이상이면 : com.querydsl.core.NonUniqueResultException   
+fetchFirst() : limit(1).fetchOne()   
+fetchResults() : 페이징 정보 포함, total count 쿼리 추가 실행 -- deprecated
+fetchCount() : count 쿼리로 변경해서 count 수 조회
+실무에서 페이징 쿼리를 작성할 때, 데이터를 조회하는 쿼리는 여러 테이블을 조인해야 하지만, 
+count 쿼리는 조인이 필요 없는 경우도 있다. 
+그런데 이렇게 자동화된 count 쿼리는 원본 쿼리와 같이 모두 조인을 해버리기 때문에 성능이 안나올 수 있다. 
+count 쿼리에 조인이 필요없는 성능 최적화가 필요하다면, count 전용 쿼리를 별도로 작성해야 한다.
