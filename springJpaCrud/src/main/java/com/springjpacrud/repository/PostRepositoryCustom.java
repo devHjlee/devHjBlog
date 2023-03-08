@@ -7,4 +7,5 @@ import java.util.List;
 public interface PostRepositoryCustom {
     List<Post> getPosts();
     List<Post> getPostsFetchJoin();
+    List<Post> getPostsNoRelation();
 }

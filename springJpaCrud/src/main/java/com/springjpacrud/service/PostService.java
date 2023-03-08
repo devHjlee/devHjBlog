@@ -100,4 +100,5 @@ public class PostService {
     public List<Post> getPostsFetchJoin(){
         return postRepository.getPostsFetchJoin();
     }
+    public List<Post> getPostsNoRelation() { return postRepository.getPostsNoRelation(); }
 }

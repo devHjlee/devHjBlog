@@ -30,4 +30,14 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .fetchJoin()
                 .fetch();
     }
+
+    @Override
+    public List<Post> getPostsNoRelation() {
+        return jpaQueryFactory
+                .selectFrom(post)
+                .join(user).on(post.user.id.eq(user.id))
+                .fetch();
+    }
+
+
 }

@@ -572,10 +572,22 @@ public JPAQueryFactory jpaQueryFactory(){
 #### 2.Post Repository
 * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.custom-implementations 
 * PostRepositoryCustom,PostRepositoryImpl 추가   
-    * 기본 Q-Type활용
-      1. QPost p = new QPost("p"); >>> 같은테이블 조인시에만 선언해서 사용하자
-      2. QPost qpost = QPost.post;
-      3. import static com.springjpacrud.domain.QPost.post; >>>> 권장
+    * QType 선언 방법들
+      * QPost p = new QPost("p");
+      * QPost qpost = QPost.post;
+      * import static com.springjpacrud.domain.QPost.post; >>>> 권장   
+
+    * 결과 조회 메소드     
+      * fetch() : 리스트 조회, 데이터 없으면 빈 리스트 반환      
+      * fetchOne() : 단 건 조회    
+      * 결과가 없으면 : null    
+      * 결과가 둘 이상이면 : com.querydsl.core.NonUniqueResultException      
+      * fetchFirst() : limit(1).fetchOne()    
+      * fetchResults() : 페이징 정보 포함, total count 쿼리 추가 실행 -- deprecated   
+      * fetchCount() : count 쿼리로 변경해서 count 수 조회 --  deprecated   
+      실무에서 페이징 쿼리를 작성할 때, 데이터를 조회하는 쿼리는 여러 테이블을 조인해야 하지만, count 쿼리는 조인이 필요 없는 경우도 있다.  그런데 이렇게 자동화된 count 쿼리는 원본 쿼리와 같이 모두 조인을 해버리기 때문에 성능이 안나올 수 있다.   
+      count 쿼리에 조인이 필요없는 성능 최적화가 필요하다면, count 전용 쿼리를 별도로 작성해야 한다.   
+
 ```java   
 public interface PostRepositoryCustom {
     List<Post> getPosts();
@@ -624,15 +636,4 @@ public interface PostRepository extends JpaRepository<Post,Long>, PostRepository
 
 
 
-결과 조회   
-fetch() : 리스트 조회, 데이터 없으면 빈 리스트 반환   
-fetchOne() : 단 건 조회   
-결과가 없으면 : null   
-결과가 둘 이상이면 : com.querydsl.core.NonUniqueResultException   
-fetchFirst() : limit(1).fetchOne()   
-fetchResults() : 페이징 정보 포함, total count 쿼리 추가 실행 -- deprecated
-fetchCount() : count 쿼리로 변경해서 count 수 조회
-실무에서 페이징 쿼리를 작성할 때, 데이터를 조회하는 쿼리는 여러 테이블을 조인해야 하지만, 
-count 쿼리는 조인이 필요 없는 경우도 있다. 
-그런데 이렇게 자동화된 count 쿼리는 원본 쿼리와 같이 모두 조인을 해버리기 때문에 성능이 안나올 수 있다. 
-count 쿼리에 조인이 필요없는 성능 최적화가 필요하다면, count 전용 쿼리를 별도로 작성해야 한다.
+

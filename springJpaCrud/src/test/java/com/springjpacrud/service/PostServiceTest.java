@@ -59,22 +59,27 @@ class PostServiceTest {
         boolean loaded;
         //연관관계 Entity 조회
         //JpaRepository
-        List<Post> jpaPosts = postRepository.findAll();
-        loaded = emf.getPersistenceUnitUtil().isLoaded(jpaPosts.get(0).getUser());
+        List<Post> posts = postRepository.findAll();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts.get(0).getUser());
         assertThat(false).isEqualTo(loaded);
 
         //join
-        List<Post> posts = postService.getPosts();
-        loaded = emf.getPersistenceUnitUtil().isLoaded(posts.get(0).getUser());
+        List<Post> posts2 = postService.getPosts();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts2.get(0).getUser());
         assertThat(false).isEqualTo(loaded);
 
-        posts.get(0).getUser().toString();
-        loaded = emf.getPersistenceUnitUtil().isLoaded(posts.get(0).getUser());
+        posts2.get(0).getUser().toString();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts2.get(0).getUser());
         assertThat(true).isEqualTo(loaded);
 
         //FetchJoin
-        List<Post> postList = postService.getPostsFetchJoin();
-        loaded = emf.getPersistenceUnitUtil().isLoaded(postList.get(0).getUser());
+        List<Post> posts3 = postService.getPostsFetchJoin();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts3.get(0).getUser());
+        assertThat(true).isEqualTo(loaded);
+
+        //연관관계 없을시 join on
+        List<Post> posts4 = postService.getPostsNoRelation();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts4.get(0).getUser());
         assertThat(true).isEqualTo(loaded);
     }
 }
