@@ -2,6 +2,8 @@ package com.springjpacrud.repository.Impl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.springjpacrud.domain.Post;
+import com.springjpacrud.dto.PostUserDTO;
+import com.springjpacrud.dto.QPostUserDTO;
 import com.springjpacrud.repository.PostRepositoryCustom;
 import lombok.RequiredArgsConstructor;
 
@@ -39,5 +41,13 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .fetch();
     }
 
+    @Override
+    public List<PostUserDTO> getDto() {
+        return jpaQueryFactory
+                .select(new QPostUserDTO(post.title,post.content, user.email, user.userName))
+                .from(post)
+                .join(user).on(post.user.id.eq(user.id))
+                .fetch();
+    }
 
 }

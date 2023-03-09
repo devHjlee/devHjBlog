@@ -3,6 +3,7 @@ package com.springjpacrud.service;
 import com.springjpacrud.domain.Post;
 import com.springjpacrud.domain.User;
 import com.springjpacrud.dto.PostDTO;
+import com.springjpacrud.dto.PostUserDTO;
 import com.springjpacrud.repository.PostRepository;
 import com.springjpacrud.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -101,4 +102,5 @@ public class PostService {
         return postRepository.getPostsFetchJoin();
     }
     public List<Post> getPostsNoRelation() { return postRepository.getPostsNoRelation(); }
+    public List<PostUserDTO> getDto() { return postRepository.getDto(); }
 }

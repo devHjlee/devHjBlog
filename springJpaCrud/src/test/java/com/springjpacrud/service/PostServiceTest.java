@@ -2,6 +2,7 @@ package com.springjpacrud.service;
 
 import com.springjpacrud.domain.Post;
 import com.springjpacrud.dto.PostDTO;
+import com.springjpacrud.dto.PostUserDTO;
 import com.springjpacrud.repository.PostRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,6 +81,11 @@ class PostServiceTest {
         //연관관계 없을시 join on
         List<Post> posts4 = postService.getPostsNoRelation();
         loaded = emf.getPersistenceUnitUtil().isLoaded(posts4.get(0).getUser());
+        assertThat(true).isEqualTo(loaded);
+
+        //@QueryProjection DTO
+        List<PostUserDTO> posts5 = postService.getDto();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts5.get(0).getUserName());
         assertThat(true).isEqualTo(loaded);
     }
 }

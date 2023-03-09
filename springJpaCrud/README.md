@@ -529,7 +529,7 @@ PostMan을 통한 Save 테스트 및 쿼리로그
 JPQL
 - JPQL 은 문자(String)이며, Type-Check가 불가능.
 - 해당 로직 실행 전까지 작동여부 확인이 불가
-- 파라미터 바인딩은 문자열로 입력하기에 런타임 시점(실행시점오류)
+- 파라미터 바인딩은 문자열로 입력하기에 런타임 시점(실행시점오류)   
 
 QueryDSL
 - 문자가 아닌 코드로 작성
@@ -572,7 +572,7 @@ public JPAQueryFactory jpaQueryFactory(){
 #### 2.Post Repository
 * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.custom-implementations 
 * PostRepositoryCustom,PostRepositoryImpl 추가   
-    * QType 선언 방법들
+    * QType 선언 방법
       * QPost p = new QPost("p");
       * QPost qpost = QPost.post;
       * import static com.springjpacrud.domain.QPost.post; >>>> 권장   
@@ -592,6 +592,8 @@ public JPAQueryFactory jpaQueryFactory(){
 public interface PostRepositoryCustom {
     List<Post> getPosts();
     List<Post> getPostsFetchJoin();
+    List<Post> getPostsNoRelation();
+    List<PostUserDTO> getDto();
 }
 
 import static com.springjpacrud.domain.QPost.post;
@@ -599,6 +601,8 @@ import static com.springjpacrud.domain.QUser.user;
 
 @RequiredArgsConstructor
 public class PostRepositoryImpl implements PostRepositoryCustom {
+    private final JPAQueryFactory jpaQueryFactory;
+
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -617,6 +621,23 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                 .fetchJoin()
                 .fetch();
     }
+
+    @Override
+    public List<Post> getPostsNoRelation() {
+        return jpaQueryFactory
+                .selectFrom(post)
+                .join(user).on(post.user.id.eq(user.id))
+                .fetch();
+    }
+
+    @Override
+    public List<PostUserDTO> getDto() {
+        return jpaQueryFactory
+                .select(new QPostUserDTO(post.title,post.content, user.email, user.userName))
+                .from(post)
+                .join(user).on(post.user.id.eq(user.id))
+                .fetch();
+    }
 }
 
 ```    
@@ -629,6 +650,120 @@ public interface PostRepository extends JpaRepository<Post,Long>, PostRepository
     Post findPostById(Long id);
 }
 
+```   
+
+* Test   
+```java   
+    @Test
+    void getPosts(){
+        boolean loaded;
+        //연관관계 Entity 조회
+        //JpaRepository
+        List<Post> posts = postRepository.findAll();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts.get(0).getUser());
+        assertThat(false).isEqualTo(loaded);
+
+        //join(1)
+        List<Post> posts2 = postService.getPosts();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts2.get(0).getUser());
+        assertThat(false).isEqualTo(loaded);
+
+        posts2.get(0).getUser().toString();//(1.1)
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts2.get(0).getUser());
+        assertThat(true).isEqualTo(loaded);
+
+        //FetchJoin(2)
+        List<Post> posts3 = postService.getPostsFetchJoin();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts3.get(0).getUser());
+        assertThat(true).isEqualTo(loaded);
+
+        //연관관계 없을시 join on(3)
+        List<Post> posts4 = postService.getPostsNoRelation();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts4.get(0).getUser());
+        assertThat(true).isEqualTo(loaded);
+
+        //@QueryProjection DTO(4)
+        List<PostUserDTO> posts5 = postService.getDto();
+        loaded = emf.getPersistenceUnitUtil().isLoaded(posts5.get(0).getUserName());
+        assertThat(true).isEqualTo(loaded);
+    }
+```   
+
+* (1) : 연관관계가 있는 엔티티와 Join을 하여 사용할 수 있고 연관관계에 따라 on이 붙는다.    
+* (1.1) : 이때 Lazy로 설정 해놨기에 User는 Proxy 객체 상태에서 직접 접근시 데이터베이스를 통해 조회한다.     
+```java   
+select
+post0_.post_id as post_id1_0_,
+post0_.content as content2_0_,
+post0_.email as email3_0_,
+post0_.title as title4_0_,
+post0_.user_no as user_no5_0_
+from
+post post0_
+inner join
+user user1_
+on post0_.user_no=user1_.user_no   
+
+select
+    user0_.user_no as user_no1_2_0_,
+    user0_.email as email2_2_0_,
+    user0_.password as password3_2_0_,
+    user0_.user_name as user_nam4_2_0_ 
+from
+    user user0_ 
+where
+    user0_.user_no=1   
+```   
+    
+* (2) : fetchJoin 사용시 User를 프록시객체가 아닌 실제 객체로 가져온다.    
+```java   
+    select
+        post0_.post_id as post_id1_0_0_,
+        user1_.user_no as user_no1_2_1_,
+        post0_.content as content2_0_0_,
+        post0_.email as email3_0_0_,
+        post0_.title as title4_0_0_,
+        post0_.user_no as user_no5_0_0_,
+        user1_.email as email2_2_1_,
+        user1_.password as password3_2_1_,
+        user1_.user_name as user_nam4_2_1_ 
+    from
+        post post0_ 
+    inner join
+        user user1_ 
+            on post0_.user_no=user1_.user_no
+```   
+* (3) : Join on을 이용하여 연관관계가 없는 테이블과 Join하여 사용할 수 있다.   
+```java   
+    select
+        post0_.post_id as post_id1_0_,
+        post0_.content as content2_0_,
+        post0_.email as email3_0_,
+        post0_.title as title4_0_,
+        post0_.user_no as user_no5_0_ 
+    from
+        post post0_ 
+    inner join
+        user user1_ 
+            on (
+                post0_.user_no=user1_.user_no
+            )
+```   
+* (4) : QueryProjection 을 통해 QDTO 가 생성되고 리턴받을 수 있다.   
+    * 컴파일러 타입을 체크할 수 있어 안전하지만 QueryDsl에 의존성이 심해진다. 귀찮다.
+```java   
+    select
+        post0_.title as col_0_0_,
+        post0_.content as col_1_0_,
+        user1_.email as col_2_0_,
+        user1_.user_name as col_3_0_ 
+    from
+        post post0_ 
+    inner join
+        user user1_ 
+            on (
+                post0_.user_no=user1_.user_no
+            )
 ```   
 
 
