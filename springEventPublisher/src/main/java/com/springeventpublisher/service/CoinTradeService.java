@@ -16,7 +16,8 @@ public class CoinTradeService {
     final private ApplicationEventPublisher applicationEventPublisher;
 
     public void coinTrade(){
-        log.info("Coin 자동구매 로직진행");
+        log.info("Coin 자동구매 로직 실행");
+        log.info("Coin 자동구매 로직 종료");
         //Event 발생
         applicationEventPublisher.publishEvent(new AlarmEvent("USER1","BTC구매"));
         log.info("Coin 자동구매 종료");
