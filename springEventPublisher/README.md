@@ -11,7 +11,7 @@ Spring Event 사용방법
 * 이벤트에는 발생시키는 Publisher 와 받는 Listener 이 있고 이벤트에서 데이터를 담는 이벤트 모델로 이루어져 있다.
 * 직접적인 결합이 없기 때문에 로직의 흐름을 파악하기 쉽지 않다는 단점이 생길 수 도 있다.
 * 스프링 이벤트는 언제 사용할까?
-  * 서비스간의 결합도를 낮추고 싶고 메인 로직과 크게 상관이 없는 로직을 사용할 때
+  * 서비스간의 결합도를 낮추고 싶고 메인 로직과 크게 상관이 없는 로직을 사용할 때(트랜잭션 분리)
   * 서브 로직이 에러가 나더라도 메인 로직은 정상적 완료 하고 싶을때이지만 이건 트랜잭션 설정에 따라서 다르게 할 수 있다.
 
 ## 개발환경
@@ -24,7 +24,7 @@ Spring Event 사용방법
 ![img1.png](img1.png)
 
 ### 예제 소스
-* 기본적인 구조
+### 기본적인 구조
 #### CoinTradeService
 
 ``` java    
@@ -113,7 +113,7 @@ class CoinTradeServiceTest {
   }
 }
 ```   
-* 비동기를 위한 @EnableAsync / @Async   
+### 비동기를 위한 @EnableAsync / @Async   
 #### SpringEventPublisherApplication   
 ``` java    
 @SpringBootApplication
@@ -150,3 +150,8 @@ public class AlarmEventListener {
 
 ![img3.png](img3.png)
 
+### @TransactionalEventListener
+* BEFORE_COMMIT
+  AFTER_COMMIT
+  AFTER_ROLLBACK
+  AFTER_COMPLETION
