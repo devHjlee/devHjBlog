@@ -115,7 +115,7 @@ class CoinTradeServiceTest {
 ```   
 ### 비동기를 위한 @EnableAsync / @Async   
 #### SpringEventPublisherApplication   
-``` java    
+```java    
 @SpringBootApplication
 @EnableAsync // 비동기 Event를 위한 설정
 public class SpringEventPublisherApplication {
@@ -127,7 +127,7 @@ public class SpringEventPublisherApplication {
 }
 ```   
 #### AlarmEventListener 수정
-``` java    
+```java    
 @Slf4j
 @Component
 public class AlarmEventListener {
@@ -150,8 +150,107 @@ public class AlarmEventListener {
 
 ![img3.png](img3.png)
 
-### @TransactionalEventListener
-* BEFORE_COMMIT
-  AFTER_COMMIT
-  AFTER_ROLLBACK
-  AFTER_COMPLETION
+### @TransactionalEventListener    
+* 이벤트 발행자의 트랜잭션을 기준으로 이벤트 실행시점을 조절할때 사용   
+  * BEFORE_COMMIT : 발행자의 트랜잭션이 커밋되기 직전에 이벤트를 발생   
+  * AFTER_COMMIT : 발행자의 트랜잭션이 커밋된 후 이벤트 발생(Default)   
+  * AFTER_ROLLBACK : 발행자의 트랜잭션이 롤백된 후 이벤트 발생   
+  * AFTER_COMPLETION : 발행자의 트랜잭션 성공여부와 상관없이 끝나면 발생   
+
+
+* 위에 사용하던 소스에서 CoinTradeService 와 AlarmEventListener 단순한 테스트를 위해 Save 로직추가    
+
+```java    
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CoinTradeService {
+    final private TradeHistoryRepository tradeHistoryRepository;
+    final private ApplicationEventPublisher applicationEventPublisher;
+
+    @Transactional
+    public void coinTrade(){
+        log.info("Coin 자동구매 로직 실행");
+        TradeHistory th = new TradeHistory();
+        th.setCoin("BTC");
+        th.setPrice(10000L);
+        tradeHistoryRepository.save(th);
+        log.info("Coin 자동구매 로직 종료");
+        //Event 발생
+        applicationEventPublisher.publishEvent(new AlarmEvent("USER1","BTC구매"));
+        log.info("Coin 자동구매 종료");
+
+        //throw new RuntimeException();
+    }
+}
+```    
+
+* 기존 사용하던 @EventListener 에서 @TransactionEventListener 로 변경하고 이벤트(카카오,슬랙) 추가   
+
+```java    
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class AlarmEventListener {
+    private final AlarmHistoryRepository alarmHistoryRepository;
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void sendSlack(AlarmEvent event) {
+        AlarmHistory ah = new AlarmHistory();
+        ah.setSendType("Slack");
+        alarmHistoryRepository.save(ah);
+        log.info(String.format("슬랙 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
+        //throw new RuntimeException();
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void sendTelegram(AlarmEvent event) {
+        AlarmHistory ah = new AlarmHistory();
+        ah.setSendType("Telegram");
+        alarmHistoryRepository.save(ah);
+        log.info(String.format("Telegram 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void sendKakao(AlarmEvent event) {
+        AlarmHistory ah = new AlarmHistory();
+        ah.setSendType("Kakao");
+        alarmHistoryRepository.save(ah);
+        log.info(String.format("Kakao 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void sendMail(AlarmEvent event) {
+        AlarmHistory ah = new AlarmHistory();
+        ah.setSendType("Email");
+        alarmHistoryRepository.save(ah);
+        log.info(String.format("EMAIL 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
+    }
+}
+```   
+
+예시 : 정상적인 흐름일때에는 아래와 같다.   
+* 위에 소스에서 텔레그램은 BEFORE_COMMIT 으로 선언되어 있어서 발행자와 같은 트랜잭션으로 묶인다.   
+* 슬랙은 AFTER_COMMIT 으로 선언되어 있고 발행자의 트랜잭션이 커밋된 후 REQUIRES_NEW 를 통해 새 트랜잭션을 생성하고 Insert를 진행한다.   
+* 이메일은 AFTER_COMPLETION이므로 발행자의 트랜잭션 커밋 후 성공여부와 상관없이 REQUIRES_NEW 를 통해 새 트랜잭션을 생성하고 Insert를 진행한다.   
+* 카카오는 AFTER_ROLLBACK 으로 발행자의 트랜잭션이 롤백될 때에만 실행되게 설정했다.   
+![img4.png](img4.png)     
+      
+예시 : 발행자쪽 RuntimeException 발생시는 아래와 같다.
+* 텔레그램은 발행자와 같은 트랜잭션에 있으므로 롤백
+* 슬랙은 발행자의 롤백으로 인해 실행이 되지 않는다.
+* 카카오는 발행자의 롤백으로 인해 실행된다.
+* 이메일은 발행자의 트랜잭션 커밋,롤백 후 진행되므로 실행된다.
+  ![img6.png](img6.png)   
+### @Transactional(Transactional.TxType.REQUIRES_NEW)   
+예시 : 정상적인 흐름이나 슬랙이벤트에 REQUIRES_NEW 주석처리   
+![img5.png](img5.png)   
+
+## Spring Event를 통해 위와 같이 비동기 처리를하거나 메인로직과 이벤트의 트랜잭션을 묶어 처리하거나 분리하여 처리할 수 있다.
+
+### 참고자료
+https://www.baeldung.com/spring-events    
+https://velog.io/@znftm97/%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EA%B8%B0%EB%B0%98-%EC%84%9C%EB%B9%84%EC%8A%A4%EA%B0%84-%EA%B0%95%EA%B2%B0%ED%95%A9-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0-ApplicationEventPublisher#span-stylecolor0b6e994-transactionaleventlistener-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0span
