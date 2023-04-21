@@ -1,5 +1,6 @@
-package com.springcontrolleradivce.exception;
+package com.springcontrolleradivce.response;
 
+import com.springcontrolleradivce.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public class ErrorResponse {
