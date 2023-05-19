@@ -12,8 +12,17 @@ import java.util.Map;
 @RestController
 public class HelloController {
 
-    @GetMapping("/helloData")
-    public ResponseEntity<Map<String, Object>> getData(@RequestParam String name, @RequestParam int age) {
+    @GetMapping("/filterData")
+    public ResponseEntity<Map<String, Object>> filterData(@RequestParam String name, @RequestParam int age) {
+        Map<String, Object> resMap = new HashMap<>();
+        resMap.put("name", name);
+        resMap.put("age", age);
+
+        return new ResponseEntity<Map<String,Object>>(resMap, HttpStatus.OK);
+    }
+
+    @GetMapping("/noFilterData")
+    public ResponseEntity<Map<String, Object>> noFilterData(@RequestParam String name, @RequestParam int age) {
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("name", name);
         resMap.put("age", age);
