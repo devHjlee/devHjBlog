@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 public class HelloController {
 
-    @GetMapping("/getData")
+    @GetMapping("/helloData")
     public ResponseEntity<Map<String, Object>> getData(@RequestParam String name, @RequestParam int age) {
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("name", name);

@@ -1,15 +1,18 @@
 package com.com.spring.filter;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Slf4j
 public class CorsFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-
+        log.info("CorsFilter init START");
     }
 
     @Override
@@ -33,6 +36,6 @@ public class CorsFilter implements Filter {
 
     @Override
     public void destroy() {
-
+        log.info("CorsFilter init Destory");
     }
 }
