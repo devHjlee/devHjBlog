@@ -8,12 +8,12 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 
 @Slf4j
-public class ParamFilter implements Filter {
+public class CustomRequestFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // 초기화할 때 실행
-        log.info("init START");
+        log.info("Custom Request init START");
     }
 
     @Override
@@ -71,6 +71,6 @@ public class ParamFilter implements Filter {
     @Override
     public void destroy() {
         // 종료될 때 실행
-        log.info("destroy START");
+        log.info("Custom Request init Destory");
     }
 }

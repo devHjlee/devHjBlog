@@ -1,8 +1,8 @@
 package com.com.spring.config;
 
 import com.com.spring.filter.CorsFilter;
-import com.com.spring.filter.ParamFilter;
-import com.com.spring.filter.ServerNameFilter;
+import com.com.spring.filter.CustomResponseFilter;
+import com.com.spring.filter.CustomRequestFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +22,8 @@ public class FilterConfig {
     }
 
     @Bean
-    public FilterRegistrationBean<ParamFilter> paramFilter() {
-        FilterRegistrationBean<ParamFilter> registrationBean = new FilterRegistrationBean<>(new ParamFilter());
+    public FilterRegistrationBean<CustomRequestFilter> customRequestFilter() {
+        FilterRegistrationBean<CustomRequestFilter> registrationBean = new FilterRegistrationBean<>(new CustomRequestFilter());
         registrationBean.setUrlPatterns(Arrays.asList("/*")); // 필터 적용 url
         registrationBean.setOrder(2); // 필터 적용 순서
 
@@ -31,8 +31,8 @@ public class FilterConfig {
     }
 
     @Bean
-    public FilterRegistrationBean<ServerNameFilter> serverNameFilter() {
-        FilterRegistrationBean<ServerNameFilter> registrationBean = new FilterRegistrationBean<>(new ServerNameFilter());
+    public FilterRegistrationBean<CustomResponseFilter> customResponseFilter() {
+        FilterRegistrationBean<CustomResponseFilter> registrationBean = new FilterRegistrationBean<>(new CustomResponseFilter());
         registrationBean.setUrlPatterns(Arrays.asList("/*")); // 필터 적용 url
         registrationBean.setOrder(3); // 필터 적용 순서
 
