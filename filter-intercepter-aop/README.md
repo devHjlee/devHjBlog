@@ -33,7 +33,7 @@ Filter 활용.
 ## 개발환경
 * IDE : IntelliJ
 * Jdk : OpenJdk 11
-* gradle
+* maven
 * spring boot : 2.7.11
 
 - 프로젝트 구조
