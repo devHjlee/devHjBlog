@@ -1,256 +1,203 @@
 # 목적
-Filter 활용
+Filter 활용.
 
 ## 예제소스
-### https://github.com/devHjlee/devHjBlog/tree/main/filter-interceptor-aop    
+### https://github.com/devHjlee/devHjBlog/tree/main/filter-interceptor-aop
+## Filter
 
-## Filter   
-* 스프링이벤트란 스프링의 Bean 과 Bean 사이에 데이터를 전달하는 방법   
-* 일반적으로 DI 를 통해 이루어진다 A Class 에서 B Class 에 대한 의존성을 주입받아 A Class 에서 B Class Method 를 호출하여 본인의 클래스에서 사용   
-* 이벤트는 A Class 에서 ApplicationContext 로 넘겨주고 이를 Listener 에서 받아 처리.   
-* 이벤트에는 발생시키는 Publisher 와 받는 Listener 이 있고 이벤트에서 데이터를 담는 이벤트 모델로 이루어져 있다.
-* 직접적인 결합이 없기 때문에 로직의 흐름을 파악하기 쉽지 않다는 단점이 생길 수 도 있다.
-* 스프링 이벤트는 언제 사용할까?
-  * 서비스간의 결합도를 낮추고 싶고 메인 로직과 크게 상관이 없는 로직을 사용할 때(트랜잭션 분리)
-  * 서브 로직이 에러가 나더라도 메인 로직은 정상적 완료 하고 싶을때이지만 이건 트랜잭션 설정에 따라서 다르게 할 수 있다.
+![[Request.png]]
+
+- 필터는 디스패처서블릿에 요청이 전달되기 전/후 에 url 패턴에 맞는 모든 요청에 대해 부가작업을 처리 할 수 있는 기능을 제공합니다.
+* `javax.servlet.Filter`는 Java Servlet API의 일부로, 웹 애플리케이션에서 들어오는 요청과 해당 응답을 가로채고 조작하는 데 사용되는 인터페이스입니다. 필터는 요청 전후에 특정 작업을 수행하거나 응답을 수정하는 데 유용합니다. 주요 목적은 애플리케이션의 공통된 작업을 중앙에서 관리하고 코드 중복을 피하는 것입니다.
+* 필터는 웹 애플리케이션의 요청 및 응답 처리 파이프라인에서 동작하며, 여러 필터가 연속적으로 체인으로 연결될 수 있습니다. 각 필터는 요청이나 응답에 대해 작업을 수행한 후 체인의 다음 필터로 제어를 전달하거나, 체인의 끝에 도달하면 최종적으로 서블릿에게 제어를 전달합니다.
+* 일반적인 필터 작업에는 다음과 같은 것들이 있을 수 있습니다:
+  * 요청/응답 로깅: 요청 및 응답 내용을 기록하거나 모니터링하는 용도로 사용할 수 있습니다.
+  * 인증 및 권한 부여: 요청에 대한 인증 및 권한 부여 작업을 수행할 수 있습니다.
+  * 데이터 변환: 요청 데이터나 응답 데이터를 변환하거나 형식을 조작할 수 있습니다.
+  * 캐싱: 응답을 캐시하여 성능을 향상시킬 수 있습니다.
+  * 예외 처리: 예외 상황에 대한 처리를 수행할 수 있습니다.
+* `javax.servlet.Filter` 인터페이스를 구현하는 필터 클래스는 `doFilter()` 메서드를 오버라이드해야 합니다. 이 메서드에서 실제 필터링 작업을 수행하고, 요청을 변경하거나 응답을 조작한 후 `FilterChain` 객체의 `doFilter()` 메서드를 호출하여 체인의 다음 필터로 제어를 전달합니다.
+* Dispatcher Servlet에 요청이 전달되기 전 / 후에 url 패턴에 맞는 모든 요청에 대해 부가 작업을 처리할 수 있는 기능을 제공
+* 필터는 Request와 Response를 조작할 수 있지만, 인터셉터는 조작 불가능
+* 주요 메소드
+  - init() - 필터 인스턴스 초기화 시 실행되는 메서드
+  - doFilter() - 클라이언트의 요청/응답 처리 시 실행되는 메서드
+  - destroy() - 필터 인스턴스가 제거될 때 실행되는 메서드
+
+- Spring 을 통한 다양한 구현방법
+  -  @Configuration + FilterRegistrationBean : 예시 작성
+  -  @Component
+  -  @WebFilter + @ServletComponentScan
+  -  @WebFilter + @Component(주의사항 : https://velog.io/@bey1548/WebFilter)
 
 ## 개발환경
 * IDE : IntelliJ
 * Jdk : OpenJdk 11
 * gradle
-* spring boot : 2.7.9   
+* spring boot : 2.7.11
 
-## 프로젝트 구조   
-![img1.png](img1.png)
+- 프로젝트 구조
+  ![img1.png](img1.png)
 
-### 예제 소스
-### 기본적인 구조
-#### CoinTradeService
+#### FilterConfig
+``` java    
+@Configuration  
+public class FilterConfig {  
+  
+    @Bean  
+    public FilterRegistrationBean<CorsFilter> corsFilter() {  
+        FilterRegistrationBean<CorsFilter> registrationBean = new FilterRegistrationBean<>(new CorsFilter());  
+        registrationBean.setUrlPatterns(Arrays.asList("/*")); // 필터 적용 url        registrationBean.setOrder(1); // 필터 적용 순서  
+  
+        return registrationBean;  
+    }  
+  
+    @Bean  
+    public FilterRegistrationBean<CustomRequestFilter> customRequestFilter() {  
+        FilterRegistrationBean<CustomRequestFilter> registrationBean = new FilterRegistrationBean<>(new CustomRequestFilter());  
+        registrationBean.setUrlPatterns(Arrays.asList("/*")); // 필터 적용 url        registrationBean.setOrder(2); // 필터 적용 순서  
+  
+        return registrationBean;  
+    }  
+  
+    @Bean  
+    public FilterRegistrationBean<CustomResponseFilter> customResponseFilter() {  
+        FilterRegistrationBean<CustomResponseFilter> registrationBean = new FilterRegistrationBean<>(new CustomResponseFilter());  
+        registrationBean.setUrlPatterns(Arrays.asList("/*")); // 필터 적용 url        registrationBean.setOrder(3); // 필터 적용 순서  
+  
+        return registrationBean;  
+    }  
+}  
+```  
+
+
+#### Filter
+``` java    
+@Slf4j  
+public class CustomRequestFilter implements Filter {  
+  
+    @Override  
+    public void init(FilterConfig filterConfig) throws ServletException {  
+        // 초기화할 때 실행  
+        log.info("Custom Request init START");  
+    }  
+  
+    @Override  
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)  
+            throws IOException, ServletException {  
+        HttpServletRequest req = (HttpServletRequest) request;  
+  
+        // GET 방식 요청 중 '/filterData' 경로에 대해서만 파라미터 변경  
+        if (req.getMethod().equals("GET") && req.getRequestURI().equals("/filterData")) {  
+            // 요청을 위한 커스텀 래퍼(wrapper) 생성  
+            CustomRequestWrapper requestWrapper = new CustomRequestWrapper(req){  
+                @Override  
+                public String getServerName() {  
+                    return "test.com";  
+                }  
+            };  
+  
+            // 원하는 대로 파라미터 수정  
+            requestWrapper.setParameter("name", req.getParameter("name"));  
+            requestWrapper.setParameter("age", req.getParameter("age"));  
+            requestWrapper.setParameter("user", "1");  
+  
+            // 수정된 요청으로 계속 진행  
+            log.info("CustomRequestFilter Start");  
+            filterChain.doFilter(requestWrapper, response);  
+            log.info("CustomRequestFilter End");  
+        } else {  
+            // 다른 요청에 대해서는 기존 요청 그대로 전달  
+            filterChain.doFilter(request, response);  
+        }  
+    }  
+  
+    @Override  
+    public void destroy() {  
+        // 종료될 때 실행  
+        log.info("Custom Request init Destory");  
+    }  
+}
+```  
+
+
+#### Wrapper
+``` java    
+public class CustomRequestWrapper extends HttpServletRequestWrapper {  
+  
+    private final Map<String, String[]> modifiedParameters;  
+  
+    public CustomRequestWrapper(HttpServletRequest request) {  
+        super(request);  
+        this.modifiedParameters = new HashMap<>(request.getParameterMap());  
+    }  
+  
+    @Override  
+    public String getParameter(String name) {  
+        String[] values = modifiedParameters.get(name);  
+        return (values != null && values.length > 0) ? values[0] : null;  
+    }  
+  
+    @Override  
+    public Map<String, String[]> getParameterMap() {  
+        return Collections.unmodifiableMap(modifiedParameters);  
+    }  
+  
+    @Override  
+    public Enumeration<String> getParameterNames() {  
+        return Collections.enumeration(modifiedParameters.keySet());  
+    }  
+  
+    @Override  
+    public String[] getParameterValues(String name) {  
+        return modifiedParameters.get(name);  
+    }  
+  
+    public void setParameter(String name, String value) {  
+        modifiedParameters.put(name, new String[]{value});  
+    }  
+}
+```  
+
+
+#### Test Controller
 
 ``` java    
-@Slf4j
-@Service
-@RequiredArgsConstructor
-@Transactional
-public class CoinTradeService {
-    final private ApplicationEventPublisher applicationEventPublisher;
+@Slf4j  
+@RestController  
+public class HelloController {  
+  
+    @GetMapping("/filterData")  
+    public ResponseEntity<Map<String, Object>> filterData(HttpServletRequest request, @RequestParam String name, @RequestParam int age) {  
+        Map<String, Object> resMap = new HashMap<>();  
+        resMap.put("name", name);  
+        resMap.put("age", age);  
+        log.info(request.getServerName());  
+        return new ResponseEntity<Map<String,Object>>(resMap, HttpStatus.OK);  
+    }  
+  
+    @GetMapping("/noFilterData")  
+    public ResponseEntity<Map<String, Object>> noFilterData(@RequestParam String name, @RequestParam int age) {  
+        Map<String, Object> resMap = new HashMap<>();  
+        resMap.put("name", name);  
+        resMap.put("age", age);  
+  
+        return new ResponseEntity<Map<String,Object>>(resMap, HttpStatus.OK);  
+    }  
+} 
+```  
 
-    public void coinTrade(){
-        log.info("Coin 자동구매 로직 실행");
-        log.info("Coin 자동구매 로직 종료");
-        //Event 발생
-        applicationEventPublisher.publishEvent(new AlarmEvent("USER1","BTC구매"));
-        log.info("Coin 자동구매 종료");
-    }
-}
-```   
+#### 실행 결과
+- http://localhost:8080/filterData?name=a&age=1 호출
+- CustomRequestFilter doFilter 를 통해 요청값의 ServerName 을 변경하고 user 파라미터를 추가하였다
+- CustomResponseFilter doFilter 를 통해 응답값의 파라미터중 user 의 값을 1에서 Y 로 변경하였다.
 
-#### AlarmEvent(이벤트 모델)
-* 이벤트 객체 Spring 4.2 이전까지는 ApplicationEvent를 상속받아야 했지만 Spring 4.2부터는 순수한 자바 객체(POJO)를 이벤트 객체로 사용할 수 있다.   
-
-``` java    
-@Getter
-@Setter
-@AllArgsConstructor
-public class AlarmEvent {
-    private String usrId;
-    private String msg;
-}
-```   
-
-#### AlarmEventListener
-* Spring 4.2 이전까지는 ApplicationListener를 상속받아야 했지만 Spring 4.2부터는 @EventListener 애노테이션 기반으로 이벤트를 처리할 수 있다.   
-
-``` java    
-@Slf4j
-@Component
-public class AlarmEventListener {
-    @EventListener
-    public void sendTelegram(AlarmEvent event) {
-        log.info(String.format("텔레그램 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-
-    @EventListener
-    public void sendMail(AlarmEvent event) {
-        log.info(String.format("EMAIL 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-}
-```   
-* 테스트 결과
-  ![img0.png](img0.png)
-
-``` java   
-@Slf4j
-@Component
-public class AlarmEventListener {
-    @EventListener
-    @Order(2)
-    public void sendTelegram(AlarmEvent event) {
-        log.info(String.format("텔레그램 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-
-    @EventListener
-    @Order(1)
-    public void sendMail(AlarmEvent event) {
-        log.info(String.format("EMAIL 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-}
-```   
-* Order 테스트 결과   
-
-![img2.png](img2.png)   
-
-
-#### Test Code
-```java   
-@SpringBootTest
-class CoinTradeServiceTest {
-  @Autowired
-  CoinTradeService coinTradeService;
-  @Test
-  void coinTrade() {
-    coinTradeService.coinTrade();
-  }
-}
-```   
-### 비동기를 위한 @EnableAsync / @Async   
-#### SpringEventPublisherApplication   
-```java    
-@SpringBootApplication
-@EnableAsync // 비동기 Event를 위한 설정
-public class SpringEventPublisherApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(SpringEventPublisherApplication.class, args);
-    }
-
-}
-```   
-#### AlarmEventListener 수정
-```java    
-@Slf4j
-@Component
-public class AlarmEventListener {
-    @EventListener
-    @Async
-    @Order(1)
-    public void sendTelegram(AlarmEvent event) {
-        log.info(String.format("텔레그램 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-
-    @EventListener
-    @Async
-    @Order(2)
-    public void sendMail(AlarmEvent event) {
-        log.info(String.format("EMAIL 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-}
-```    
-* 예를들어 이벤트인 메시지 발송이 오래 걸리는 상황에서 비동기 처리시 메인 로직은 이벤트의 응답을 기다리지 않아도 된다.   
+![img2.png](img2.png)
 
 ![img3.png](img3.png)
 
-### @TransactionalEventListener    
-* 이벤트 발행자의 트랜잭션을 기준으로 이벤트 실행시점을 조절할때 사용   
-  * BEFORE_COMMIT : 발행자의 트랜잭션이 커밋되기 직전에 이벤트를 발생   
-  * AFTER_COMMIT : 발행자의 트랜잭션이 커밋된 후 이벤트 발생(Default)   
-  * AFTER_ROLLBACK : 발행자의 트랜잭션이 롤백된 후 이벤트 발생   
-  * AFTER_COMPLETION : 발행자의 트랜잭션 성공여부와 상관없이 끝나면 발생   
 
-
-* 위에 사용하던 소스에서 CoinTradeService 와 AlarmEventListener 단순한 테스트를 위해 Save 로직추가    
-
-```java    
-@Service
-@RequiredArgsConstructor
-@Transactional
-public class CoinTradeService {
-    final private TradeHistoryRepository tradeHistoryRepository;
-    final private ApplicationEventPublisher applicationEventPublisher;
-
-    @Transactional
-    public void coinTrade(){
-        log.info("Coin 자동구매 로직 실행");
-        TradeHistory th = new TradeHistory();
-        th.setCoin("BTC");
-        th.setPrice(10000L);
-        tradeHistoryRepository.save(th);
-        log.info("Coin 자동구매 로직 종료");
-        //Event 발생
-        applicationEventPublisher.publishEvent(new AlarmEvent("USER1","BTC구매"));
-        log.info("Coin 자동구매 종료");
-
-        //throw new RuntimeException();
-    }
-}
-```    
-
-* 기존 사용하던 @EventListener 에서 @TransactionEventListener 로 변경하고 이벤트(카카오,슬랙) 추가   
-
-```java    
-@Slf4j
-@Component
-@RequiredArgsConstructor
-public class AlarmEventListener {
-    private final AlarmHistoryRepository alarmHistoryRepository;
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void sendSlack(AlarmEvent event) {
-        AlarmHistory ah = new AlarmHistory();
-        ah.setSendType("Slack");
-        alarmHistoryRepository.save(ah);
-        log.info(String.format("슬랙 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-        //throw new RuntimeException();
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void sendTelegram(AlarmEvent event) {
-        AlarmHistory ah = new AlarmHistory();
-        ah.setSendType("Telegram");
-        alarmHistoryRepository.save(ah);
-        log.info(String.format("Telegram 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void sendKakao(AlarmEvent event) {
-        AlarmHistory ah = new AlarmHistory();
-        ah.setSendType("Kakao");
-        alarmHistoryRepository.save(ah);
-        log.info(String.format("Kakao 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void sendMail(AlarmEvent event) {
-        AlarmHistory ah = new AlarmHistory();
-        ah.setSendType("Email");
-        alarmHistoryRepository.save(ah);
-        log.info(String.format("EMAIL 발송[수신자 : %s][내용 : %s]", event.getUsrId(), event.getMsg()));
-    }
-}
-```   
-
-예시 : 정상적인 흐름일때에는 아래와 같다.   
-* 위에 소스에서 텔레그램은 BEFORE_COMMIT 으로 선언되어 있어서 발행자와 같은 트랜잭션으로 묶인다.   
-* 슬랙은 AFTER_COMMIT 으로 선언되어 있고 발행자의 트랜잭션이 커밋된 후 REQUIRES_NEW 를 통해 새 트랜잭션을 생성하고 Insert를 진행한다.   
-* 이메일은 AFTER_COMPLETION이므로 발행자의 트랜잭션 커밋 후 성공여부와 상관없이 REQUIRES_NEW 를 통해 새 트랜잭션을 생성하고 Insert를 진행한다.   
-* 카카오는 AFTER_ROLLBACK 으로 발행자의 트랜잭션이 롤백될 때에만 실행되게 설정했다.   
-![img4.png](img4.png)     
-      
-예시 : 발행자쪽 RuntimeException 발생시는 아래와 같다.
-* 텔레그램은 발행자와 같은 트랜잭션에 있으므로 롤백
-* 슬랙은 발행자의 롤백으로 인해 실행이 되지 않는다.
-* 카카오는 발행자의 롤백으로 인해 실행된다.
-* 이메일은 발행자의 트랜잭션 커밋,롤백 후 진행되므로 실행된다.
-  ![img6.png](img6.png)   
-### @Transactional(Transactional.TxType.REQUIRES_NEW)   
-예시 : 정상적인 흐름이나 슬랙이벤트에 REQUIRES_NEW 주석처리   
-![img5.png](img5.png)   
-
-## Spring Event를 통해 위와 같이 비동기 처리를하거나 메인로직과 이벤트의 트랜잭션을 묶어 처리하거나 분리하여 처리할 수 있다.
-
-### 참고자료
-https://www.baeldung.com/spring-events    
-https://velog.io/@znftm97/%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EA%B8%B0%EB%B0%98-%EC%84%9C%EB%B9%84%EC%8A%A4%EA%B0%84-%EA%B0%95%EA%B2%B0%ED%95%A9-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0-ApplicationEventPublisher#span-stylecolor0b6e994-transactionaleventlistener-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0span
+### 참고
+* https://velog.io/@ksk7584/Filter%EB%A5%BC-%EB%93%B1%EB%A1%9D%ED%95%98%EB%8A%94-4%EA%B0%80%EC%A7%80-%EB%B0%A9%EB%B2%95
+* https://mangkyu.tistory.com/221
+* Chat GPT
