@@ -23,7 +23,12 @@ public class CustomRequestFilter implements Filter {
         // GET 방식 요청 중 '/filterData' 경로에 대해서만 파라미터 변경
         if (req.getMethod().equals("GET") && req.getRequestURI().equals("/filterData")) {
             // 요청을 위한 커스텀 래퍼(wrapper) 생성
-            CustomRequestWrapper requestWrapper = new CustomRequestWrapper(req);
+            CustomRequestWrapper requestWrapper = new CustomRequestWrapper(req){
+                @Override
+                public String getServerName() {
+                    return "test.com";
+                }
+            };
 
             // 원하는 대로 파라미터 수정
             requestWrapper.setParameter("name", req.getParameter("name"));
@@ -31,7 +36,9 @@ public class CustomRequestFilter implements Filter {
             requestWrapper.setParameter("user", "1");
 
             // 수정된 요청으로 계속 진행
+            log.info("CustomRequestFilter Start");
             filterChain.doFilter(requestWrapper, response);
+            log.info("CustomRequestFilter End");
         } else {
             // 다른 요청에 대해서는 기존 요청 그대로 전달
             filterChain.doFilter(request, response);

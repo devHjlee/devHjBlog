@@ -36,6 +36,7 @@ public class CustomResponseFilter implements Filter {
             CustomResponseWrapper customResponseWrapper = new CustomResponseWrapper(response);
 
             // 필터 체인 실행 (컨트롤러로 진입)
+            log.info("CustomResponseFilter Start");
             filterChain.doFilter(request, customResponseWrapper);
 
             // 컨트롤러가 생성한 응답값 가져오기
@@ -51,6 +52,7 @@ public class CustomResponseFilter implements Filter {
             // 수정된 응답값을 클라이언트로 전송
             response.setContentType("application/json");
             response.getWriter().write(modifiedResponseJson);
+            log.info("CustomResponseFilter END");
         } else {
             // 다른 경로에 대해서는 기존 응답 그대로 전달
             filterChain.doFilter(request, response);
