@@ -1,4 +1,4 @@
-package com.com.spring.filter;
+package com.spring.filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;

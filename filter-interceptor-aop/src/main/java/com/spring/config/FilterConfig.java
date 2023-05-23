@@ -1,8 +1,8 @@
-package com.com.spring.config;
+package com.spring.config;
 
-import com.com.spring.filter.CorsFilter;
-import com.com.spring.filter.CustomResponseFilter;
-import com.com.spring.filter.CustomRequestFilter;
+import com.spring.filter.CorsFilter;
+import com.spring.filter.CustomRequestFilter;
+import com.spring.filter.CustomResponseFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

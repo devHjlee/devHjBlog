@@ -1,4 +1,4 @@
-package com.com.spring.filter;
+package com.spring.filter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.com.spring.controller;
+package com.spring.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
