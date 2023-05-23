@@ -1,4 +1,4 @@
-package com.com.spring.filter;
+package com.spring.filter;
 
 import lombok.extern.slf4j.Slf4j;
 
