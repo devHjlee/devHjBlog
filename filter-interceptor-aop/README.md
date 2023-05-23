@@ -25,10 +25,12 @@ Filter 활용.
   - destroy() - 필터 인스턴스가 제거될 때 실행되는 메서드
 
 - Spring 을 통한 다양한 구현방법
-  -  @Configuration + FilterRegistrationBean : 예시 작성
-  -  @Component
-  -  @WebFilter + @ServletComponentScan
-  -  @WebFilter + @Component(주의사항 : https://velog.io/@bey1548/WebFilter)
+  - @Configuration + FilterRegistrationBean : 예시 작성
+    -  FilterRegistrationBean은 스프링 애플리케이션 컨텍스트의 빈으로 등록되며, 스프링 빈에 직접 접근할 수 있는 기능을 제공합니다.
+    -  FilterRegistrationBean을 사용하여 Filter를 등록하고, 필요한 스프링 빈에 주입하여 사용할 수 있습니다.
+  - @Component
+  - @WebFilter + @ServletComponentScan
+  - @WebFilter + @Component(주의사항 : https://velog.io/@bey1548/WebFilter)
 
 ## 개발환경
 * IDE : IntelliJ
