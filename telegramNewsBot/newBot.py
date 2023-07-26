@@ -16,7 +16,7 @@ bot = telegram.Bot(token=telegram_token)
 
 # Naver
 def navernews(message):
-    url = "https://openapi.naver.com/v1/search/news.json?query=%s&start=1&display=100" % urllib.parse.quote('금리')
+    url = "https://openapi.naver.com/v1/search/news.json?query=%s&start=1&display=100" % urllib.parse.quote(message)
     req = urllib.request.Request(url)
     req.add_header("X-Naver-Client-Id", naver_id)
     req.add_header("X-Naver-Client-Secret", naver_secret)
