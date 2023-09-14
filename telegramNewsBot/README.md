@@ -2,7 +2,7 @@
 1. 텔레그램 봇 라이브러리를 활용하여 뉴스 검색어에 대한 네이버,구글뉴스 응답 기능구현
 
 ## 예제소스
-###https://github.com/devHjlee/devHjBlog/tree/main/springJpaCrud  
+###https://github.com/devHjlee/devHjBlog/tree/main/telegramNewsBot  
 
 ## ORM ??
 ORM(Object-Relational Mapping)은 객체와 관계형 데이터베이스를 매핑하며 ORM 프레임워크는 객체와 테이블을 매핑하여 패러다임 불일치 문제를 개발자 대신 해결해준다.
